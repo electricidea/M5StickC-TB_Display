@@ -3,7 +3,7 @@
  * 
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * 01/19/2020
+ * v1.1 01.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -13,12 +13,20 @@
  * 
  * This example shows characters from the serial port on the M5StickC display.
  * If a Keyboard-Hat is connected, also the characters from the Keyboard
- * are shoen on the display.
+ * are shown on the display.
+ * 
+ * Changelog:
+ * v1.0 = initial version
+ * v1.1 = Added delay parameter to tb_display_print_String function
+ *        Added text demo in Example (Button B on M5StickC)
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
 #include <Arduino.h>
 
+// M5StickC Library:
+// Install for PlatformIO:
+// pio lib install "M5StickC"
 #include <M5StickC.h>
 
 #include "tb_display.h"
@@ -50,7 +58,7 @@ void setup() {
 	Serial.println("===================");
 	Serial.println("     M5StickC");
 	Serial.println("Textbuffer Display");
-	Serial.println(" 19.01.2020 v1.0");
+	Serial.println(" 01.02.2020 v1.1");
 	Serial.println("===================");
 
   // init the text buffer display and print welcome text on the display
@@ -83,6 +91,14 @@ void loop() {
         break;
       }
     }
+  }
+
+  // Display a long Text if Button B is pressed
+  if (M5.BtnB.wasPressed()){
+    // note:
+    // with 85ms Character delay, the display looks more
+    // like Teletype or a typewriter
+    tb_display_print_String("The quick brown fox jumps over the lazy dog and was surprised that he used all letters of the alphabet.", 85);
   }
 
   // check for serial input and print the received characters
