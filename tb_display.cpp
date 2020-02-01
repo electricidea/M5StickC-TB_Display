@@ -2,13 +2,18 @@
  * tb_display.cpp
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.0 01/19/2020
+ * v1.1 01.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
  * The display behaves like a terminal: New text is added at the bottom.
  * The text scrolls up with every new line. The lines are automatically wrapped.
  * The display can be used in any orientation. 
+ * 
+ * Changelog:
+ * v1.0 = initial version
+ * v1.1 = Added delay parameter to tb_display_print_String function
+ *        Added text demo in Example (Button B on M5StickC)
  * 
  * 
  * Distributed as-is; no warranty is given.
@@ -182,6 +187,9 @@ void tb_display_print_char(byte data){
 // print a string
 // The string is added to the text buffer and directly printed
 // on the screen.
+// The otional parameter "chr_delay" allows a "character by character"
+// processing of the String. Then, it looks like Teletype or Typewriter
+// The delay is in milliseconds.
 // The text is automatically wrapped if longer than the display
 // example: 
 //    tb_display_print_String("a new line\n");
@@ -190,10 +198,17 @@ void tb_display_print_char(byte data){
 //    char String_buffer[128]; 
 //    snprintf(String_buffer, sizeof(String_buffer), "\nthe value: %i",value);
 //    tb_display_print_String(String_buffer);
+//
+//    std::string msg;
+//    msg = ss.str();
+//    const char * c_msg = msg.c_str();
+//    tb_display_print_String(c_msg);
 // =============================================================
-void tb_display_print_String(const char *s){
+void tb_display_print_String(const char *s, int chr_delay){
   while(*s != 0){
     tb_display_print_char(*s++);
+    if(chr_delay > 0)
+      delay(chr_delay);
   }
 }
 
