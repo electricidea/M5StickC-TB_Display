@@ -17,6 +17,9 @@ When a new character is to be displayed, it draws the function on the display an
 An example can be viewed here:
 [Example Video](https://youtu.be/PCo_sT5_lpc)
 
+The project page on hackster.io can be found here:
+[hackster.io page]https://www.hackster.io/hague/m5stickc-textbuffer-scrolling-display-fb6428)
+
 ## How to use it:
 
 The initialization is very simple. You only need to call the init function with the desired orientation as parameter:
