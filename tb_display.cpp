@@ -180,7 +180,6 @@ void tb_display_print_char(byte data){
       tb_display_new_line();
       // draw the character again because it was out of the screen last time
       screen_xpos += M5.Lcd.drawChar(data,screen_xpos,screen_ypos,TEXT_SIZE);
-      Serial.println("!! max width");
     }
     // or if line wrap is reached
     if(screen_xpos >= screen_max) {
@@ -192,8 +191,6 @@ void tb_display_print_char(byte data){
       Char_buffer[n] = '\0';
       // if Word-Wrap, go backwards and get the last "word" by finding the
       // last space character:
-      Serial.println("");
-      Serial.println(text_buffer_write_pointer_x-1);
       if(tb_display_word_wrap){
         int test_pos = text_buffer_write_pointer_x-1;
         // get backwards and search a space character
