@@ -18,7 +18,7 @@ An example can be viewed here:
 [Example Video](https://youtu.be/PCo_sT5_lpc)
 
 The project page on hackster.io can be found here:
-[hackster.io page]https://www.hackster.io/hague/m5stickc-textbuffer-scrolling-display-fb6428)
+[hackster.io page](https://www.hackster.io/hague/m5stickc-textbuffer-scrolling-display-fb6428)
 
 ## How to use it:
 
