@@ -2,7 +2,7 @@
  * tb_display.cpp
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.1 01.Feb.2020
+ * v1.2 03.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -11,9 +11,12 @@
  * The display can be used in any orientation. 
  * 
  * Changelog:
- * v1.0 = initial version
- * v1.1 = Added delay parameter to tb_display_print_String function
- *        Added text demo in Example (Button B on M5StickC)
+ * v1.0 = - initial version
+ * v1.1 = - Added delay parameter to tb_display_print_String function
+ *        - Added text demo in Example (Button B on M5StickC)
+ * v1.2 = - Supress of space characters as first character on a new row
+ *          after a new line
+ *        - Add a word wrapping fuction inside the print_char function
  * 
  * 
  * Distributed as-is; no warranty is given.
@@ -54,6 +57,8 @@ int screen_ypos;
 // maximum width of the screen
 int screen_max;
 
+// Enable or disable Waord Wrap
+boolean tb_display_word_wrap = true;
 
 // =============================================================
 // Initialization of the Text Buffer and Screen
@@ -160,21 +165,72 @@ void tb_display_new_line(){
 //    tb_display_print_char('X');
 // =============================================================
 void tb_display_print_char(byte data){
-    // check for LF for new line
-    if (data == '\n') {
-      // last character in the text_buffer line  should be always a null terminator
-      text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
+  // check for LF for new line
+  if (data == '\n') {
+    // last character in the text_buffer line  should be always a null terminator
+    text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
+    tb_display_new_line();
+  }
+  // only 'printable' characters
+  if (data > 31 && data < 128) {
+    // print the character and get the new xpos
+    screen_xpos += M5.Lcd.drawChar(data,screen_xpos,screen_ypos,TEXT_SIZE);
+    // if maximum number of characters reached
+    if(text_buffer_write_pointer_x >= text_buffer_line_length-1){
       tb_display_new_line();
-    }
-    // only 'printable' characters
-    if (data > 31 && data < 128) {
-      // print the character and get the new xpos
+      // draw the character again because it was out of the screen last time
       screen_xpos += M5.Lcd.drawChar(data,screen_xpos,screen_ypos,TEXT_SIZE);
-      // line wrap.... or maximum number of characters
-      if(screen_xpos >= screen_max || text_buffer_write_pointer_x >= text_buffer_line_length-1){
-        tb_display_new_line();
-        screen_xpos += M5.Lcd.drawChar(data,screen_xpos,screen_ypos,TEXT_SIZE);
+      Serial.println("!! max width");
+    }
+    // or if line wrap is reached
+    if(screen_xpos >= screen_max) {
+      // prepare for Word-Wrap stuff...
+      // the buffer for storing the last word content
+      char Char_buffer[TEXT_BUFFER_LINE_LENGTH_MAX];
+      int n = 1;
+      Char_buffer[0] = data;
+      Char_buffer[n] = '\0';
+      // if Word-Wrap, go backwards and get the last "word" by finding the
+      // last space character:
+      Serial.println("");
+      Serial.println(text_buffer_write_pointer_x-1);
+      if(tb_display_word_wrap){
+        int test_pos = text_buffer_write_pointer_x-1;
+        // get backwards and search a space character
+        while(test_pos > 0 && text_buffer[text_buffer_write_pointer_y][test_pos] != ' '){
+          // store all the characters on the way back to the last space character
+          Char_buffer[n] = text_buffer[text_buffer_write_pointer_y][test_pos];
+          test_pos--;
+          n++;
+        }
+        // if there was no space character in the row, Word-Wrap is not possible
+        if(test_pos == 0) {
+          // don't use the buffer but draw the character passed to the function
+          n = 1;
+        } else {
+          // otherwise use the buffer to print the last found characters of the word
+          // place a \0 at the position of the found space so that the drawing fuction ends here
+          text_buffer[text_buffer_write_pointer_y][test_pos] = '\0';
+          Char_buffer[n] = '\0';
+        }
       }
+      tb_display_new_line();
+      // icharacter passed to the function is a space character, then don't display
+      // it as the first character of the new line
+      if(data == ' ') 
+        // don't use the buffer at all
+        n = 0;
+      n--;
+      while(n >= 0){
+        // draw the characters from the buffer back on the screen
+        screen_xpos += M5.Lcd.drawChar(Char_buffer[n],screen_xpos,screen_ypos,TEXT_SIZE);
+        // write the characters into the screen buffer of the new line
+        text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = Char_buffer[n];
+        text_buffer_write_pointer_x++;
+        n--;
+      }
+      text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
+    } else {
       // write the character into the screen buffer
       text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = data;
       text_buffer_write_pointer_x++;
@@ -182,6 +238,7 @@ void tb_display_print_char(byte data){
       text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
     }
   }
+}
 
 // =============================================================
 // print a string

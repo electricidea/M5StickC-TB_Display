@@ -3,7 +3,7 @@
  * tb_display.h
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.1 01.Feb.2020
+ * v1.2 03.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -12,14 +12,19 @@
  * The display can be used in any orientation. 
  * 
  * Changelog:
- * v1.0 = initial version
- * v1.1 = Added delay parameter to tb_display_print_String function
- *        Added text demo in Example (Button B on M5StickC)
+ * v1.0 = - initial version
+ * v1.1 = - Added delay parameter to tb_display_print_String function
+ *        - Added text demo in Example (Button B on M5StickC)
+ * v1.2 = - Supress of space characters as first character on a new row
+ *          after a new line
+ *        - Add a word wrapping fuction inside the print_char function
  * 
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
 
+// Enable or disable Waord Wrap
+extern boolean tb_display_word_wrap;
 
 // =============================================================
 //           tb_display_init(int ScreenRotation);

@@ -3,7 +3,7 @@
  * 
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.1 01.Feb.2020
+ * v1.2 03.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -16,9 +16,12 @@
  * are shown on the display.
  * 
  * Changelog:
- * v1.0 = initial version
- * v1.1 = Added delay parameter to tb_display_print_String function
- *        Added text demo in Example (Button B on M5StickC)
+ * v1.0 = - initial version
+ * v1.1 = - Added delay parameter to tb_display_print_String function
+ *        - Added text demo in Example (Button B on M5StickC)
+ * v1.2 = - Supress of space characters as first character on a new row
+ *          after a new line
+ *        - Add a word wrapping fuction inside the print_char function
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
@@ -43,7 +46,7 @@ uint8_t screen_brightness = 10;
 // 2 = Button above
 // 3 = Button left
 // 4 = Button below
-int screen_orientation = 1;
+int screen_orientation = 3;
 
 
 void setup() {
@@ -58,7 +61,7 @@ void setup() {
 	Serial.println("===================");
 	Serial.println("     M5StickC");
 	Serial.println("Textbuffer Display");
-	Serial.println(" 01.02.2020 v1.1");
+	Serial.println(" 03.02.2020 v1.2");
 	Serial.println("===================");
 
   // init the text buffer display and print welcome text on the display
@@ -98,6 +101,11 @@ void loop() {
     // note:
     // with 85ms Character delay, the display looks more
     // like Teletype or a typewriter
+    tb_display_word_wrap = !tb_display_word_wrap;
+    if(tb_display_word_wrap)
+     tb_display_print_String("\n\nwwrap ON\n\n");
+    else
+     tb_display_print_String("\n\nwwrap OFF\n\n");
     tb_display_print_String("The quick brown fox jumps over the lazy dog and was surprised that he used all letters of the alphabet.", 85);
   }
 
