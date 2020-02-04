@@ -3,7 +3,7 @@
  * 
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.2 03.Feb.2020
+ * v1.3 04.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -22,6 +22,7 @@
  * v1.2 = - Supress of space characters as first character on a new row
  *          after a new line
  *        - Add a word wrapping fuction inside the print_char function
+ * v1.3 = - Bugfix if the character that causes a word wrap is a space character
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
@@ -61,7 +62,7 @@ void setup() {
 	Serial.println("===================");
 	Serial.println("     M5StickC");
 	Serial.println("Textbuffer Display");
-	Serial.println(" 03.02.2020 v1.2");
+	Serial.println(" 04.02.2020 v1.3");
 	Serial.println("===================");
 
   // init the text buffer display and print welcome text on the display

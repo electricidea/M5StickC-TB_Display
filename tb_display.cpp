@@ -2,7 +2,7 @@
  * tb_display.cpp
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.2 03.Feb.2020
+ * v1.3 04.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -17,7 +17,7 @@
  * v1.2 = - Supress of space characters as first character on a new row
  *          after a new line
  *        - Add a word wrapping fuction inside the print_char function
- * 
+ * v1.3 = - Bugfix if the character that causes a word wrap is a space character
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
@@ -199,6 +199,7 @@ void tb_display_print_char(byte data){
           Char_buffer[n] = text_buffer[text_buffer_write_pointer_y][test_pos];
           test_pos--;
           n++;
+          Char_buffer[n] = '\0';
         }
         // if there was no space character in the row, Word-Wrap is not possible
         if(test_pos == 0) {
@@ -206,9 +207,11 @@ void tb_display_print_char(byte data){
           n = 1;
         } else {
           // otherwise use the buffer to print the last found characters of the word
-          // place a \0 at the position of the found space so that the drawing fuction ends here
-          text_buffer[text_buffer_write_pointer_y][test_pos] = '\0';
-          Char_buffer[n] = '\0';
+          // but only, if the charachter that causes a word wrap is not a space character
+          if(data != ' '){
+            // place a \0 at the position of the found space so that the drawing fuction ends here
+            text_buffer[text_buffer_write_pointer_y][test_pos] = '\0';
+          }
         }
       }
       tb_display_new_line();
