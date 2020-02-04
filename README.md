@@ -50,3 +50,5 @@ Change main.cpp to tb_display.ino and place the .cpp .h and .ino into a director
 * v1.2
   * Supress of space characters as first character on a new row after a new line
   * Add a word wrapping fuction inside the print_char function
+* v1.3
+  * Bugfix if the character that causes a word wrap is a space character
