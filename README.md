@@ -9,10 +9,12 @@ Any orientation of the M5StickC can be used!
 
 ## How it works:
 
-A text buffer is used to store the text which is to be displayed. Depending on whether the display is used in portrait or landscape orientation, the text buffer has 5 lines or 10 lines.
+A text buffer is used to store the text which is to be displayed. With text size 2 (the default), depending on whether the display is used in portrait or landscape orientation, the text buffer has 5 lines or 10 lines.
 New characters are always written in the last line of the buffer, so that the text scrolls up like a classic terminal. 
 The number of possible characters per line varies between characters. In the portrait orientation, between 8 and 23 characters fit in one line. A typical text needs 9 to 11 characters. In the landscape orientation between 19 and 50 characters fit in one line. A typical text requires between 21 and 24 characters.
 When a new character is to be displayed, it draws the function on the display and checks if the position behind the character is outside the display. If so, the line is automatically wrapped and the character is displayed as the first character in the new line.
+
+With larger text sizes, fewer characters will fit per line, and fewer lines will fit on the screen.
 
 An example can be viewed here:
 [Example Video](https://youtu.be/PCo_sT5_lpc)
@@ -26,6 +28,11 @@ The initialization is very simple. You only need to call the init function with 
 ```c++
 void tb_display_init(int ScreenRotation);
 ```
+Or, to specify an alternative text size:
+```c++
+void tb_display_init(int ScreenRotation, int TextSize)
+```
+
 Either single characters can be written into the buffer, or a whole string. The following functions are available:
 ```c++
 void tb_display_print_char(byte data);
@@ -37,8 +44,7 @@ With the global variable tb_display_word_wrap the word-wrapping function can be 
 
 ## Environment:
 
-The files work fine with PlatformIO. For use with the Arduino IDE only really minor changes are required:
-Change main.cpp to tb_display.ino and place the .cpp .h and .ino into a directory.
+The files work fine with PlatformIO. For use with the Arduino IDE, point your IDE to the tb_display dir in lib
 
 ## Changelog
 
@@ -52,3 +58,6 @@ Change main.cpp to tb_display.ino and place the .cpp .h and .ino into a director
   * Add a word wrapping fuction inside the print_char function
 * v1.3
   * Bugfix if the character that causes a word wrap is a space character
+* v1.4
+  * Support arbitrary text size.
+  * Code restructuring for platformio conventions and Arduino compatibility.
