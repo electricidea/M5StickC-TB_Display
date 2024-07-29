@@ -2,7 +2,7 @@
  * tb_display.cpp
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.3 04.Feb.2020
+ * v1.6 29.July.2024
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -18,35 +18,71 @@
  *          after a new line
  *        - Add a word wrapping fuction inside the print_char function
  * v1.3 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.4 = - Added "tb_display_delete_char" function
+ *        - screen_xpos and text_buffer_write_pointer_x set in display_show function
+ * v1.5 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.6 = Added case differentiation between M5StcikC und M5StickCPlus
+ * 
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
 
 #include <Arduino.h>
-#include <M5StickC.h>
 #include "tb_display.h"
 
+// Choose the type of M5Stick here:
+// #define M5STICKC
+#define M5STICKCPLUS
 
 // TextSize 1 is very small on the display = hard to read
 // Textsize 2 is good readable without the need of an microscope.
 // This code only runs with text size 2!
 #define TEXT_SIZE 2
 #define TEXT_HEIGHT 16 // Height of text to be printed
-// Display size of M5StickC = 160x80
+// Display size of M5StickC     = 160x80
+// Display size of M5StickCPlus = 240*135
 // With TEXT_HEIGHT=16, the screen can display:
+// M5StickC:
 //    5 rows of text in portrait mode
 //   10 rows of text in landscape mode
+// M5StcikCPlus:
+//    8 rows of text in portrait mode
+//   15 rows of text in landscape mode
 
+// M5StickC:
+// Display size of M5StickC = 160x80
 // screen buffer for 10 rows of 60 characters max.
-#define TEXT_BUFFER_HEIGHT_MAX 10
-#define TEXT_BUFFER_LINE_LENGTH_MAX 60
-char text_buffer[TEXT_BUFFER_HEIGHT_MAX][TEXT_BUFFER_LINE_LENGTH_MAX];
+#ifdef M5STICKC
+  // import the right lib
+  #include <M5StickC.h>
+  #define SCREEN_WIDTH 160
+  #define SCREEN_HEIGHT 80
+  #define TEXT_BUFFER_HEIGHT_WIDE 10
+  #define TEXT_BUFFER_HEIGHT_NARROW 5
+  #define TEXT_BUFFER_LINE_LENGTH_WIDE 60
+  #define TEXT_BUFFER_LINE_LENGTH_NARROW 30
+#endif
+// M5StickCPlus:
+// Display size of M5StickCPlus = 240*135
+// screen buffer for 15 rows of 90 characters max.
+#ifdef M5STICKCPLUS
+  // import the right lib
+  #include "M5StickCPlus.h"
+  #define SCREEN_WIDTH 240
+  #define SCREEN_HEIGHT 135
+  #define TEXT_BUFFER_HEIGHT_WIDE 15
+  #define TEXT_BUFFER_HEIGHT_NARROW 8
+  #define TEXT_BUFFER_LINE_LENGTH_WIDE 90
+  #define TEXT_BUFFER_LINE_LENGTH_NARROW 45
+#endif
+
+char text_buffer[TEXT_BUFFER_HEIGHT_WIDE][TEXT_BUFFER_LINE_LENGTH_WIDE];
 
 int text_buffer_height;
 int text_buffer_line_length;
 int text_buffer_write_pointer_x;
 int text_buffer_write_pointer_y;
-int text_buffer_read_pointer;
+int text_buffer_read_pointer_y;
 // with M5.Lcd.setRotation(1) 
 // the position 0,0 is the upper left corner
 // starting a bit more right...
@@ -59,6 +95,7 @@ int screen_max;
 
 // Enable or disable Waord Wrap
 boolean tb_display_word_wrap = true;
+
 
 // =============================================================
 // Initialization of the Text Buffer and Screen
@@ -77,20 +114,20 @@ void tb_display_init(int ScreenRotation){
   switch (ScreenRotation) {
     case 1: case 3: {
       // 5 rows of text in landscape mode
-      text_buffer_height = 5;
-      text_buffer_line_length = 60;
-      // width of the screen in landscape mode is 160 pixel
+      text_buffer_height = TEXT_BUFFER_HEIGHT_NARROW;
+      text_buffer_line_length = TEXT_BUFFER_LINE_LENGTH_WIDE;
+      // width of the screen in landscape mode
       // A small margin on the right side prevent false print results
-      screen_max = 160-2; 
+      screen_max = SCREEN_WIDTH-2; 
       break;
     }
     case 2: case 4: {
       // 10 rows of text in portrait mode
-      text_buffer_height = 10;
+      text_buffer_height = TEXT_BUFFER_HEIGHT_WIDE;
       text_buffer_line_length = 30;
-      // width of the screen in portrait mode is 80 pixel
+      // width of the screen in portrait mode
       // A small margin on the right side prevent false print results
-      screen_max = 80-2; 
+      screen_max = SCREEN_HEIGHT-2; 
       break;
     }
     default: {
@@ -107,12 +144,12 @@ void tb_display_init(int ScreenRotation){
 // call tb_display_show(); to clear the screen
 // =============================================================
 void tb_display_clear(){
-  for(int line=0; line<TEXT_BUFFER_HEIGHT_MAX; line++){
-    for(int charpos=0; charpos<TEXT_BUFFER_LINE_LENGTH_MAX; charpos++){
+  for(int line=0; line<TEXT_BUFFER_HEIGHT_WIDE; line++){
+    for(int charpos=0; charpos<TEXT_BUFFER_LINE_LENGTH_WIDE; charpos++){
       text_buffer[line][charpos]='\0';
     }
   }
-  text_buffer_read_pointer = 0;
+  text_buffer_read_pointer_y = 0;
   text_buffer_write_pointer_x = 0;
   text_buffer_write_pointer_y = text_buffer_height-1;
   screen_xpos = SCREEN_XSTARTPOS;
@@ -125,18 +162,22 @@ void tb_display_clear(){
 void tb_display_show(){
   M5.Lcd.fillScreen(TFT_BLACK);
   int yPos = 0;
+  int xPos = 0;
+  int charpos = 0;
   for(int n=0; n<text_buffer_height; n++){
     // modulo operation for line position
-    int line = (text_buffer_read_pointer+n) % text_buffer_height;
-    int xPos = SCREEN_XSTARTPOS;
-    int charpos=0;
+    int line = (text_buffer_read_pointer_y+n) % text_buffer_height;
+    xPos = SCREEN_XSTARTPOS;
+    charpos = 0;
     while(xPos < screen_max && text_buffer[line][charpos] != '\0'){
       xPos += M5.Lcd.drawChar(text_buffer[line][charpos],xPos,yPos,TEXT_SIZE);
       charpos++;
     }
     yPos = yPos + TEXT_HEIGHT;
   }
-  screen_xpos = SCREEN_XSTARTPOS;
+  // screen_xpos is the actual pos after printing the last line
+  screen_xpos = xPos; 
+  text_buffer_write_pointer_x = charpos;
 }
 
 // =============================================================
@@ -145,12 +186,12 @@ void tb_display_show(){
 void tb_display_new_line(){
   text_buffer_write_pointer_x = 0;
   text_buffer_write_pointer_y++;
-  text_buffer_read_pointer++;
+  text_buffer_read_pointer_y++;
   // circular buffer...
   if(text_buffer_write_pointer_y >= text_buffer_height)
     text_buffer_write_pointer_y = 0;
-  if(text_buffer_read_pointer >= text_buffer_height)
-    text_buffer_read_pointer = 0;
+  if(text_buffer_read_pointer_y >= text_buffer_height)
+    text_buffer_read_pointer_y = 0;
   // clear the actual new line for writing (first character a null terminator)
   text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
   tb_display_show();
@@ -185,7 +226,7 @@ void tb_display_print_char(byte data){
     if(screen_xpos >= screen_max) {
       // prepare for Word-Wrap stuff...
       // the buffer for storing the last word content
-      char Char_buffer[TEXT_BUFFER_LINE_LENGTH_MAX];
+      char Char_buffer[TEXT_BUFFER_LINE_LENGTH_WIDE];
       int n = 1;
       Char_buffer[0] = data;
       Char_buffer[n] = '\0';
@@ -238,13 +279,13 @@ void tb_display_print_char(byte data){
       text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
     }
   }
-}
+  }
 
 // =============================================================
 // print a string
 // The string is added to the text buffer and directly printed
 // on the screen.
-// The otional parameter "chr_delay" allows a "character by character"
+// The optional parameter "chr_delay" allows a "character by character"
 // processing of the String. Then, it looks like Teletype or Typewriter
 // The delay is in milliseconds.
 // The text is automatically wrapped if longer than the display
@@ -267,5 +308,31 @@ void tb_display_print_String(const char *s, int chr_delay){
     if(chr_delay > 0)
       delay(chr_delay);
   }
+}
+
+// =============================================================
+// delete the last character
+// the last character will be deleted from the text buffer
+// If the first character of a row is deleted, the display scrolls
+// automatically down
+// =============================================================
+void tb_display_delete_char(){
+  if(text_buffer_write_pointer_x > 0){
+    // go one character to the left
+    text_buffer_write_pointer_x--;
+    // replace the character with \0
+    text_buffer[text_buffer_write_pointer_y][text_buffer_write_pointer_x] = '\0';
+  } else {
+    // scroll the display one row down
+    text_buffer_write_pointer_y--;
+    text_buffer_read_pointer_y--;
+    // circular buffer...
+    if(text_buffer_write_pointer_y < 0)
+      text_buffer_write_pointer_y = text_buffer_height - 1;
+    if(text_buffer_read_pointer_y < 0)
+      text_buffer_read_pointer_y = text_buffer_height - 1;
+  }
+  // refresh the full display
+  tb_display_show();
 }
 

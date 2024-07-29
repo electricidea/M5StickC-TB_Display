@@ -3,7 +3,7 @@
  * 
  * Library for a simple text buffer scrolling display on the M5StickC.
  * Hague Nusseck @ electricidea
- * v1.3 04.Feb.2020
+ * v1.2 02.Feb.2020
  * https://github.com/electricidea/M5StickC-TB_Display
  * 
  * This library makes it easy to display texts on the M5StickC.
@@ -23,15 +23,27 @@
  *          after a new line
  *        - Add a word wrapping fuction inside the print_char function
  * v1.3 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.4 = - Added "tb_display_delete_char" function
+ *        - screen_xpos and text_buffer_write_pointer_x set in display_show function
+ * v1.5 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.6 = Added case differentiation between M5StcikC und M5StickCPlus
+ * 
+ * M5StickC screen resolution:       80*160
+ * M5StickC-plus screen resolution: 135*240
  * 
  * Distributed as-is; no warranty is given.
  ******************************************************************************/
 #include <Arduino.h>
 
+// M5StickCPlus Library:
+// Install for PlatformIO:
+// pio lib install "m5stack/M5StickCPlus"
+#include "M5StickCPlus.h"
+
 // M5StickC Library:
 // Install for PlatformIO:
 // pio lib install "M5StickC"
-#include <M5StickC.h>
+//#include <M5StickC.h>
 
 #include "tb_display.h"
 
@@ -40,7 +52,7 @@
 
 // Display brightness level
 // possible values: 7 - 15
-uint8_t screen_brightness = 10; 
+uint8_t screen_brightness = 15; 
 
 // scren Rotation values:
 // 1 = Button right
@@ -55,19 +67,22 @@ void setup() {
   m5.begin();
   // initialize I2C for the Keyboard Hat (not required)
   Wire.begin(0, 26);
+  // Grove-Connector: Pin 32 and 33
+  //Wire.begin(32, 33);
   // set screen brightness
-  M5.Axp.ScreenBreath(screen_brightness);
+  //M5.Axp.ScreenBreath(screen_brightness);
+  M5.Lcd.setTextColor(TFT_WHITE);  
 
   // print a welcome message over serial porta
 	Serial.println("===================");
 	Serial.println("     M5StickC");
 	Serial.println("Textbuffer Display");
-	Serial.println(" 04.02.2020 v1.3");
+	Serial.println(" 29.07.2024 v1.6");
 	Serial.println("===================");
 
   // init the text buffer display and print welcome text on the display
   tb_display_init(screen_orientation);
-  tb_display_print_String("        M5StickC\n\n   Textbuffer Display\n\n");
+  tb_display_print_String("M5StickC\n\nTextbuffer Display\n\n");
 }
 
 
@@ -102,11 +117,6 @@ void loop() {
     // note:
     // with 85ms Character delay, the display looks more
     // like Teletype or a typewriter
-    tb_display_word_wrap = !tb_display_word_wrap;
-    if(tb_display_word_wrap)
-     tb_display_print_String("\n\nwwrap ON\n\n");
-    else
-     tb_display_print_String("\n\nwwrap OFF\n\n");
     tb_display_print_String("The quick brown fox jumps over the lazy dog and was surprised that he used all letters of the alphabet.", 85);
   }
 
@@ -130,8 +140,12 @@ void loop() {
         tb_display_print_char('\n');
         Serial.write('\n');
       } else {
-        tb_display_print_char(c);
-        Serial.write(c);
+        if(c == 8){ // del on the Keyboard
+          tb_display_delete_char();
+        } else {
+          tb_display_print_char(c);
+          Serial.write(c);
+        }
       }
     }
   }
