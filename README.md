@@ -52,3 +52,10 @@ Change main.cpp to tb_display.ino and place the .cpp .h and .ino into a director
   * Add a word wrapping fuction inside the print_char function
 * v1.3
   * Bugfix if the character that causes a word wrap is a space character
+* v1.4
+ * Added "tb_display_delete_char" function
+ * screen_xpos and text_buffer_write_pointer_x set in display_show function
+* v1.5
+ * Bugfix if the character that causes a word wrap is a space character
+* v1.6
+ * Added case differentiation between M5StcikC und M5StickCPlus
