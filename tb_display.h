@@ -12,11 +12,17 @@
  * The display can be used in any orientation. 
  * 
  * Changelog:
- * v1.0 = initial version
- * v1.1 = Added delay parameter to tb_display_print_String function
- *        Added text demo in Example (Button B on M5StickC)
- * v1.2 = Added "delete character" function
- *        screen_xpos and text_buffer_write_pointer_x set in display_show function
+ * v1.0 = - initial version
+ * v1.1 = - Added delay parameter to tb_display_print_String function
+ *        - Added text demo in Example (Button B on M5StickC)
+ * v1.2 = - Supress of space characters as first character on a new row
+ *          after a new line
+ *        - Add a word wrapping fuction inside the print_char function
+ * v1.3 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.4 = - Added "tb_display_delete_char" function
+ *        - screen_xpos and text_buffer_write_pointer_x set in display_show function
+ * v1.5 = - Bugfix if the character that causes a word wrap is a space character
+ * v1.6 = Added case differentiation between M5StcikC und M5StickCPlus
  * 
  * 
  * Distributed as-is; no warranty is given.
